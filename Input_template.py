@@ -50,6 +50,7 @@ def area_acres(df):
             return "D"
     df["area_class"] =df.apply(area_class, axis=1)
     df = df.to_crs(4326)
+    print("Total area: ",df.area_acres.sum())
     return df[["area_acres","area_class","geometry"]]
 
 
@@ -73,6 +74,7 @@ def area_hect(df):
             return "D"
     df["area_class"] =df.apply(area_class, axis=1)
     df = df.to_crs(4326)
+    print(df.area_hect.sum())
     return df[["area_hect","area_class","geometry"]]
 
 
@@ -86,12 +88,6 @@ def intersection(df,df1,dist):
     df2 = gpd.overlay(df,df1,how ="intersection")
     return df2   
 
-
-# %%
-# lc_tech = read_df_UT('forest\\_ter_ar_tech\\LC_Forest_final_area_mask_1_Nagapattinam.shp')
-# _shp_district = read_df_UT("Practice\\Nagapattinam_proj32644.shp")
-# shp_water_high =read_df_UT("water\\_wd_run_high\\LC_Water_final.shp")
-# shp_water_med =read_df_UT("water\\_wd_run_med\\LC_Water_final.shp")
 
 # %% [markdown]
 # ### def fun for Calculating overlap area
