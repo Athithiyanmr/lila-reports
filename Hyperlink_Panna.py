@@ -55,10 +55,6 @@ def read_df_UT(stem):
 # ### Features
 
 # %%
-Forest_reserve =gpd.read_file("D:\Hasten Ventures\Features\Forest_reserve\\Forest_reserve.shp")
-
-# %%
-Forest_reserve
 
 # %%
 _shp_district = read_df_UT("forest\\Panna\\panna_dst.shp")
@@ -93,45 +89,54 @@ Forest_reserve = os.path.join('', 'Forest_reserve.json')
 
 
 
-# outfile = 'D:\\Panna\\workdir\\slope.tif'
-# #Open raster file
-# driver=gdal.GetDriverByName('GTiff')
-# driver.Register() 
-# ds1 = gdal.Open(outfile)
-# if ds1 is None:
-#     print('Could not open')
+outfile = 'D:\\Panna\\workdir\\slope.tif'
+#Open raster file
+driver=gdal.GetDriverByName('GTiff')
+driver.Register() 
+ds1 = gdal.Open(outfile)
+if ds1 is None:
+    print('Could not open')
+
+band=ds1.GetRasterBand(1)
+
+data= band.ReadAsArray()
 
 
+#Get coordinates, cols and rows
+geotransform = ds1.GetGeoTransform()
+cols2 = ds1.RasterXSize
+rows2 = ds1.RasterYSize
+
+#Get extent
+xmin2=geotransform[0]
+ymax2=geotransform[3]
+xmax2=xmin2+cols2*geotransform[1]
+ymin2=ymax2+rows2*geotransform[5]
+
+#Get Central point
+centerx=(xmin2+xmax2)/2
+centery=(ymin2+ymax2)/2
 
 
-# #Get coordinates, cols and rows
-# geotransform = ds1.GetGeoTransform()
-# cols2 = ds1.RasterXSize
-# rows2 = ds1.RasterYSize
+a = np.nanmax(data)
+b = np.nanmin(data)
 
-# #Get extent
-# xmin2=geotransform[0]
-# ymax2=geotransform[3]
-# xmax2=xmin2+cols2*geotransform[1]
-# ymin2=ymax2+rows2*geotransform[5]
+print(a,b)     
+def get_color_slope(x):
+   
+    if 0<= x <= 45:
+        return (240,240,240,1)
+    elif 45 < x <= 90 :
+        return (195,195,195,1)
+    elif 90 < x <=135 :
+        return (150,150,150,1)
+    elif 135 < x <= 180:
+        return (104,104,104,0.7)
+    elif 180 < x <=225 :
+        return (104,104,104,1)
+    else:
+        return (255,0,0,0)
 
-# #Get Central point
-# centerx=(xmin2+xmax2)/2
-# centery=(ymin2+ymax2)/2
-
-
-
-
-# data_array = ds1.ReadAsArray().astype(dtype=float)
-
-# # color_labels = np.unique(data_array)
-# print(centery,centerx)
-
-
-# if np.any(data_array < 0):
-#     data_array[data_array < 0 ] = np.nan
-    
-# print(data_array.shape)
 
 # AVC_grey = LinearSegmentedColormap.from_list('testcmap1', colors=['#686868', '#969696', '#c3c3c3', '#F0F0F0'], N=256)
 
@@ -143,13 +148,13 @@ Forest_reserve = os.path.join('', 'Forest_reserve.json')
 m= folium.Map(location=[24.436933515, 80.20336914], zoom_start=8)
  
 
-# g2 = folium.plugins.FeatureGroupSubGroup(m, 'Slope',show=False)
+g2 = folium.plugins.FeatureGroupSubGroup(m, 'Slope',show=False)
 g3 = folium.plugins.FeatureGroupSubGroup(m, 'Substations',show=False)
 g4 = folium.plugins.FeatureGroupSubGroup(m, 'Roads',show=False)
 g5 = folium.plugins.FeatureGroupSubGroup(m, 'Forest reserve',show=False)
 
 
-# m.add_child(g2)
+m.add_child(g2)
 m.add_child(g3)
 m.add_child(g4)
 m.add_child(g5)
@@ -177,40 +182,8 @@ title_html = '''
 m.get_root().html.add_child(folium.Element(title_html))
 
 
-
-
-
-
-# # item_txt = """     <div style="text-align: center;"><img src="D:\\Panna\\slope_cb.jpg" alt="Image" height="80px" width="80px"/></div>  """
-# html_itms = item_txt.format( item= "Legend" , col= "red")
-
-# legend_html = """
-#      <div style="
-#      position: fixed; 
-#      bottom: 50px; left: 50px; width: 100px; height: 100px; 
-#      border:2px solid grey; z-index:9999; 
-     
-#      background-color:transparent;
-#      opacity: .85;
-     
-#      font-size:14px;
-#      font-weight: bold;
-     
-#      ">
-#      <img src="D:\\Panna\\slope_cb.jpg" alt="Image" height="80px" width="80px"/>
-#      &nbsp; {title} 
-     
-#      {itm_txt}
-     
-#       </div> """.format( title = "", itm_txt= html_itms)
-# g2.get_root().html.add_child(folium.Element( legend_html ))
-
-
-
-
-
-
-
+cm2 = cm.LinearColormap(['#F0F0F0','#c3c3c3','#969696','#686868'], vmin=0, vmax=225, caption='Elevation in meters')
+m.add_child(cm2)
 
 folium.GeoJson(
     _shp_district,
@@ -231,16 +204,16 @@ folium.GeoJson(
 
 
 
-# g2.add_child(raster_layers.ImageOverlay(
-#     image=data_array,
-#     show=False,
-#     name = 'Slope',
-#     bounds=[[ymin2, xmin2], [ymax2, xmax2]],
-#     colormap=AVC_grey,
-#     interactive=True,
-#     mercator_project = True,
-#     opacity=1
-# ))#.add_to(m)
+g2.add_child(raster_layers.ImageOverlay(
+    image=data,
+    show=False,
+    name = 'Slope',
+    bounds=[[ymin2, xmin2], [ymax2, xmax2]],
+    colormap=lambda x: get_color_slope(x),
+    interactive=True,
+    mercator_project = True,
+    opacity=1
+))#.add_to(m)
 
 # ###Reference
 
