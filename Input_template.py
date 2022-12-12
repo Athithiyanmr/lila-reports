@@ -115,4 +115,39 @@ def find_overlap_area(df,tag,fdf2):
             olap_perc = 0
         df1.at[i,'olap%'+tag] =  olap_perc      
         df1.at[i,'olaparea'+tag] = olaparea
+    df = df.to_crs(4326)
     return pd.concat([df,df1], axis= 1)
+
+
+# %% [markdown]
+# ### Def func for merging two shape files
+
+# %%
+def merge(df,df1):
+    merge = gpd.pd.concat([df,df1])
+    return merge
+
+
+# %% [markdown]
+# ### def fun for calculating total area for different area_class
+
+# %%
+def area_class_total(df):
+    a = df.groupby(["area_class"])["area_acres"].agg(["sum","count"])
+    print("Total area : ",df.area_acres.sum(),"Length :",len(df))
+    return a
+
+
+# %% [markdown]
+# ### def fun for top 15 land
+
+# %%
+def top15(df,df1):
+    a = df.sort_values(by=["area_acres"],ascending = False)
+    b = df1.sort_values(by=["area_acres"],ascending = False)
+    c = gpd.pd.concat([a,b])
+    c = c[:15]
+    c = c.reset_index()
+    return c
+
+# %%
