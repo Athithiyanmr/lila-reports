@@ -50,8 +50,9 @@ def area_acres(df):
             return "D"
     df["area_class"] =df.apply(area_class, axis=1)
     df = df.to_crs(4326)
-    print("Total area: ",df.area_acres.sum())
-    return df[["area_acres","area_class","geometry"]]
+    print("Total area: ",df.area_acres.sum(),"length : ",len(df))
+    print(df.groupby(["area_class"])["area_acres"].agg(["sum","count"]))
+    return (df)
 
 
 # %% [markdown]
@@ -74,19 +75,9 @@ def area_hect(df):
             return "D"
     df["area_class"] =df.apply(area_class, axis=1)
     df = df.to_crs(4326)
-    print(df.area_hect.sum())
-    return df[["area_hect","area_class","geometry"]]
-
-
-# %% [markdown]
-# ### define func for the difference and intersection between shape files
-
-# %%
-def intersection(df,df1,dist):
-    df = gpd.overlay(dist,df,how ="intersection")
-    df1 = gpd.overlay(dist,df1,how ="intersection")
-    df2 = gpd.overlay(df,df1,how ="intersection")
-    return df2   
+    print("Total area: ",df.area_hect.sum(),"length : ",len(df))
+    print(df.groupby(["area_class"])["area_hect"].agg(["sum","count"]))
+    return (df)
 
 
 # %% [markdown]
@@ -120,25 +111,6 @@ def find_overlap_area(df,tag,fdf2):
 
 
 # %% [markdown]
-# ### Def func for merging two shape files
-
-# %%
-def merge(df,df1):
-    merge = gpd.pd.concat([df,df1])
-    return merge
-
-
-# %% [markdown]
-# ### def fun for calculating total area for different area_class
-
-# %%
-def area_class_total(df):
-    a = df.groupby(["area_class"])["area_acres"].agg(["sum","count"])
-    print("Total area : ",df.area_acres.sum(),"Length :",len(df))
-    return a
-
-
-# %% [markdown]
 # ### def fun for top 15 land
 
 # %%
@@ -150,4 +122,26 @@ def top15(df,df1):
     c = c.reset_index()
     return c
 
+
+# %% [markdown]
+# ### def fun for water-runoff criteria 
+
 # %%
+def water_runoff(df):
+    crs_utm = 32644 
+    df = df.to_crs(crs_utm)
+    df["area_acres"] = (((df.geometry.area)/10**6)*247.105)
+    def water_runoff_class(df):
+        if 0<= df["Run_Tot"] < 70:
+            return "A"
+        elif 70<= df["Run_Tot"] < 200:
+            return "B"
+        elif 200<= df["Run_Tot"]:
+            return "C"  
+        else:
+            return "D"
+    df["water_runoff_class"] =df.apply(water_runoff_class, axis=1)
+    df = df.to_crs(4326)
+    print("Total Area : ", df.area_acres.sum(),"Length :",len(df))
+    print(df.groupby(["water_runoff_class"])["area_acres"].agg(["sum","count"]))
+    return (df)
