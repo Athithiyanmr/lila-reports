@@ -30,9 +30,6 @@ def read_df_UT(stem):
 # %% [markdown]
 # ### define func for creating Area_acres and area_class
 
-# %% [markdown]
-# #### change the values of range according to the critreria
-
 # %%
 def area_acres(df):
     crs_utm = 32644 
@@ -99,6 +96,7 @@ def find_overlap_area(df,tag,fdf2):
         fids = list(sindex.intersection(geometry.bounds))
         if fids:
             olaparea = ((fdf2.iloc[fids]['geometry'].intersection(geometry)).area).sum()
+            count = (fdf2.iloc[fids]['geometry'].intersection(geometry)).count()
             olap_perc = olaparea*100/geometry.area
             olaparea = (olaparea/10**6)*247.1               
         else:
@@ -106,6 +104,7 @@ def find_overlap_area(df,tag,fdf2):
             olap_perc = 0
         df1.at[i,'olap%'+tag] =  olap_perc      
         df1.at[i,'olaparea'+tag] = olaparea
+        df1.at[i,'count'+tag] = count
     df = df.to_crs(4326)
     return pd.concat([df,df1], axis= 1)
 
@@ -120,7 +119,7 @@ def top15(df,df1):
     c = gpd.pd.concat([a,b])
     c = c[:15]
     c = c.reset_index()
-    return c
+    return (c)
 
 
 # %% [markdown]
@@ -143,5 +142,6 @@ def water_runoff(df):
     df["water_runoff_class"] =df.apply(water_runoff_class, axis=1)
     df = df.to_crs(4326)
     print("Total Area : ", df.area_acres.sum(),"Length :",len(df))
+    print("Total Runoff : ", df.Run_Tot.sum())
     print(df.groupby(["water_runoff_class"])["area_acres"].agg(["sum","count"]))
     return (df)
